@@ -1,0 +1,13 @@
+### *Posición de la región en el ranking nacional*
+
+La tabla muestra el puesto actual de la región y su posición en el trimestre móvil anterior y hace un año. La última columna resume el **mejor y peor puesto** alcanzado durante los últimos doce períodos; por ejemplo, “2.º–7.º de 16” significa que la región osciló entre el segundo y el séptimo lugar. En desocupación e informalidad, 1° corresponde a la región con la tasa mas baja; en participación, es lo Opuesto, 1° corresponde a la región con la tasa mas alta.
+
+```{r}
+ft_Posicion_Ranking_Territorial
+```
+
+El gráfico sigue únicamente la posición de la región seleccionada. Una línea que se acerca al puesto 1 señala una mejora relativa: menor desocupación e informalidad, o mayor participación, según corresponda.
+
+```{r, fig.width=8, fig.height=9, dpi=300}
+gr_Posicion_Ranking_Territorial
+```

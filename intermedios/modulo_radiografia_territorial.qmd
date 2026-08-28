@@ -1,0 +1,11 @@
+## *Claves territoriales: composición del empleo y brechas frente al país*
+
+`r texto_radiografia_genero`
+
+`r texto_radiografia_calidad`
+
+`r texto_radiografia_formalidad`
+
+`r texto_radiografia_empresas`
+
+`r texto_radiografia_sintesis`

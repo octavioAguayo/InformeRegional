@@ -1,0 +1,13 @@
+### *Estructura productiva y especialización regional*
+
+La tabla selecciona las ramas que tienen mayor peso en el empleo regional, una presencia relativamente más alta que a nivel nacional o un cambio material de participación en doce meses. La especialización compara participaciones, no niveles absolutos de ocupados.
+
+```{r}
+ft_Estructura_Sectorial_Territorial
+```
+
+El gráfico contrasta el peso de las mismas ramas dentro del empleo regional con su referencia nacional. Una barra regional más alta indica que esa rama representa una proporción mayor del empleo en la región.
+
+```{r, fig.width=9, fig.height=6, dpi=300}
+gr_Estructura_Sectorial_Territorial
+```

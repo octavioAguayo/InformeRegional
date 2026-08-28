@@ -1,0 +1,33 @@
+## *Anexo 5. Indicadores desestacionalizados (serie X13-ARIMA-SEATS)*
+
+Las cifras desestacionalizadas remueven el componente estacional de las series, permitiendo comparar trimestres consecutivos sin el ruido propio del calendario laboral. Estas series son de elaboración exclusiva del INE mediante el método X13-ARIMA-SEATS y solo están disponibles a nivel nacional. Las tablas siguientes presentan los principales indicadores desestacionalizados.
+
+La primera tabla compara el trimestre actual con el inmediatamente anterior, ya depurado el componente estacional. Los ocupados desestacionalizados `r fc_frase_cambio(DS_Mes_Ocup, 0, "personas", 5000, 3)` y los desocupados `r fc_frase_cambio(DS_Mes_Desoc, 0, "personas", 5000, 3)`, movimientos que se explican por el crecimiento de la fuerza de trabajo, que `r fc_frase_cambio(DS_Mes_FT, 0, "personas", 5000, 1)`.
+
+```{r}
+ft_Desest_DMes_AS
+```
+
+La segunda tabla extiende la comparación a doce meses. La tasa de desocupación desestacionalizada `r fc_frase_cambio(DS_Ano_TDesoc, 1, "pp.", 1e-2, 2)`, resultado de que los desocupados `r fc_frase_cambio(DS_Ano_Desoc, 0, "personas", 5000, 3)` mientras los ocupados `r fc_frase_cambio(DS_Ano_Ocup, 0, "personas", 5000, 3)`.
+
+```{r}
+ft_Desest_DAnno_AS
+```
+
+La tercera tabla toma como referencia el mismo trimestre de `r format(as.Date(Fechas["pre_covid"]), "%Y")`, previo a la pandemia. Respecto de ese nivel, la tasa de desocupación desestacionalizada `r fc_frase_cambio(DS_Pre_TDesoc, 1, "pp.", 1e-2, 2)` y la de participación `r fc_frase_cambio(DS_Pre_TPart, 1, "pp.", 1e-2, 2)`.
+
+```{r}
+ft_Desest_DPreCovid_AS
+```
+
+El gráfico presenta la tasa de desocupación desestacionalizada por sexo, con regresiones ajustadas por tramos estructurales. En el último tramo, la tasa `r if (Pend_Desoc_H > 0 & Pend_Desoc_M > 0) "crece en ambos sexos" else if (Pend_Desoc_H < 0 & Pend_Desoc_M < 0) "cae en ambos sexos" else "evoluciona en direcciones opuestas según el sexo"`, a razón de `r fc_Form_Num(abs(Pend_Desoc_H), 2)` pp. anuales en hombres y `r fc_Form_Num(abs(Pend_Desoc_M), 2)` pp. anuales en mujeres. La brecha entre ambas rectas pasó de `r fc_Form_Num(Brecha_Desoc_Ini, 1)` a `r fc_Form_Num(Brecha_Desoc_Fin, 1)` pp. dentro del tramo.
+
+```{r, fig.width=10, fig.height=6, dpi=300}
+gr_Desest_Tasa_Sexo
+```
+
+El gráfico presenta la tasa de participación desestacionalizada por sexo, con el mismo tratamiento de tramos. En el último tramo, la participación `r if (Pend_Partic_H > 0 & Pend_Partic_M > 0) "crece en ambos sexos" else if (Pend_Partic_H < 0 & Pend_Partic_M < 0) "cae en ambos sexos" else "evoluciona en direcciones opuestas según el sexo"`, a razón de `r fc_Form_Num(abs(Pend_Partic_H), 2)` pp. anuales en hombres y `r fc_Form_Num(abs(Pend_Partic_M), 2)` pp. anuales en mujeres. La brecha entre ambas rectas pasó de `r fc_Form_Num(Brecha_Partic_Ini, 1)` a `r fc_Form_Num(Brecha_Partic_Fin, 1)` pp. dentro del tramo.
+
+```{r, fig.width=10, fig.height=6, dpi=300}
+gr_Desest_Particip_Sexo
+```

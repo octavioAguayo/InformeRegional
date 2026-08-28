@@ -1,0 +1,13 @@
+## *4.3. Revisión comparada de las Variables desestacionalizadas*
+
+Al remover el componente estacional de las series —aislando la tendencia de fondo del vaivén propio del calendario laboral—, la brecha de participación entre hombres y mujeres se mantiene, lo que indica que no responde a factores de temporada. La tabla siguiente presenta los indicadores desestacionalizados por sexo, donde la distancia entre ambos se observa de forma directa.
+
+```{r}
+ft_Desest_Sexo
+```
+
+El gráfico presenta la evolución histórica de la tasa de desocupación, en su serie original y desestacionalizada por sexo, con líneas de tendencia ajustadas por tramos estructurales. En el último tramo la tasa ajustada crece a razón de `r fc_Form_Num(abs(Pend_Desoc_H), 2)` pp. anuales en hombres y `r fc_Form_Num(abs(Pend_Desoc_M), 2)` pp. anuales en mujeres, de modo que la brecha entre ambas rectas pasó de `r fc_Form_Num(Brecha_Desoc_Ini, 1)` a `r fc_Form_Num(Brecha_Desoc_Fin, 1)` pp. dentro del tramo. La tendencia se estima sobre la serie original, que no se ve afectada por la revisión de los trimestres más recientes propia del método de ajuste estacional.
+
+```{r, fig.width=10, fig.height=6, dpi=300}
+gr_Desest_Comparacion
+```

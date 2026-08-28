@@ -1,0 +1,502 @@
+---
+title: "Minuta coyuntural de empleo — `r params$region_label`" #author: "División de Políticas de Empleo"
+format:
+  docx:
+    reference-doc: ../Bibliotecas_R/estilos2_mod.docx
+  html:
+    embed-resources: true
+editor: source
+
+params:
+  region_label: "Nacional"
+  Trim_Actual: "202603"
+---
+
+<!-- Inf_ENE_Sexo_Edad_Region.qmd - v7 - 12-08-2026 -->
+
+```{r setup, include=FALSE}
+  knitr::opts_chunk$set(
+    echo = FALSE,
+    message = FALSE,
+    warning = FALSE
+  )
+
+  # ── Guardián: este qmd NO se renderiza solo ─────────────────────────────────
+  # Los defaults de params son inválidos a propósito. No los "arregles" para
+  # poder darle Render: saldría un informe con la fecha equivocada, en silencio.
+  if (!identical(Sys.getenv("GENERA_INFORMES_ACTIVO"), "TRUE")) {
+    stop(
+      "Este informe no se renderiza directamente. ",
+      "Corre GeneraInformes.R, que fija Trim_Actual y region_label correctos ",
+      "antes de llamar a quarto_render().",
+      call. = FALSE
+    )
+  }
+
+  Trim_Actual <- params$Trim_Actual
+
+  source(file.path(dirname(getwd()), "Bibliotecas_R",  "funciones_pipeline.R"))
+  source(file.path(dirname(getwd()), "Bibliotecas_R",  "funciones_formato.R"))
+  source(file.path(dirname(getwd()), "Bibliotecas_R",  "funciones_series_temporales.R"))
+  source(file.path(dirname(getwd()), "Bibliotecas_R",  "funciones_informe.R"))
+  source(file.path(dirname(getwd()), "Bibliotecas_R",  "funciones_textoActivo.R"))
+  source("Parametros_ENE.R")
+
+  source("Prepara_bbdd.R")
+  source("Variables_ENE.R")  
+  source(file.path("intermedios", "crea_objetos_kpi.R"))
+  source(file.path("intermedios", "crea_objetos_nucleo.R"))
+  source(file.path("intermedios", "crea_objetos_formalidad.R"))
+  source(file.path("intermedios", "crea_objetos_razon_fft.R"))
+  source(file.path("intermedios", "crea_objetos_region.R"))
+  source(file.path("intermedios", "crea_objetos_sector.R"))
+  source(file.path("intermedios", "crea_objetos_edad.R"))
+  source(file.path("intermedios", "crea_objetos_tamano.R"))
+  source(file.path("intermedios", "crea_objetos_desest.R"))
+  source(file.path("intermedios", "crea_objetos_ind_varios.R"))
+  source(file.path("intermedios", "crea_objetos_dur_desempleo.R"))
+  source(file.path("intermedios", "crea_objetos_motivo_desempleo.R"))
+  source(file.path("intermedios", "crea_objetos_razon_desempleo.R"))
+  
+  
+```
+
+```{r}
+  ft_KPI_Destacados
+```
+
+```{r, results='asis'}
+if (es_informe_regional) cat(knitr::knit_child(file.path("intermedios", "modulo_radiografia_territorial.qmd"), quiet = TRUE))
+```
+
+# **1. Contexto general del mercado en el trimestre `r fc_fecha_a_trimestre(fecha_Actual)`**
+
+La presente minuta analiza la evolución actual de los principales indicadores del mercado laboral respecto de tres puntos de comparación: cambios ocurridos desde el trimestre móvil inmediatamente anterior, el mismo trimestre del año anterior y otras fechas o rangos de fechas significativas que permiten mirar el mediano y largo plazo. 
+
+```{r}
+#| output: asis
+# Nota de período: fc_nota_periodo devuelve "" cuando Excel y .dta están
+# alineados, así que este cat() no escribe nada y la nota desaparece sola.
+cat(fc_nota_periodo(dta_rezagado, fecha_dta_efectiva, fecha_Actual))
+```
+
+
+La fuerza de trabajo llegó a **`r fc_Form_Num(Val_Act_FT_AS,0)` personas** en el trimestre `r fc_fecha_a_trimestre(fecha_Actual)`, los ocupados alcanzaron **`r fc_Form_Num(Val_Act_Ocupdos_AS,0)` personas**, con `r fc_frase_cambio(Delta_Año_Ocupdos_AS,0, "empleos", 1e-1,2)`, mientras que los desocupados llegaron a **`r fc_Form_Num(Val_Act_Dsocpds_AS,0)` personas, con `r fc_frase_cambio(Delta_Año_Dsocpds_AS,0, "desocupados", 1e-1,2)`**. Al observar los ocupados, vemos que los **ocupados informales** alcanzaron **`r fc_Form_Num(Val_Act_OcupInf_AS,0)` personas**, con `r fc_frase_cambio(Delta_Año_OcupInf_AS,0, "empleos", 1e-1,2)`, mientras que los **ocupados formales** llegaron a **`r fc_Form_Num(Val_Act_OcupFrm_AS,0)` personas**, con `r fc_frase_cambio(Delta_Año_OcupFrm_AS,0, "empleos", 1e-1,2)`, todos estos cambios estan medidos a igual mes del año anterior.
+
+En el trimestre actual la ocupación formal `r fc_frase_cambio(Delta_Año_OcupFrm_AS, 0, "empleos", 1e-1, 5)` en doce meses, mientras la ocupación informal `r fc_frase_cambio(Delta_Año_OcupInf_AS, 0, "empleos", 1e-1, 5)`, composición que incide en el nivel de protección laboral del empleo creado.
+
+# **2. Ideas fuerza e indicadores principales del mercado laboral**
+
+- En el trimestre `r fc_fecha_a_trimestre(fecha_Actual)`, **la tasa de participación laboral fue de `r fc_Form_Num(Tasa_Act_TPartic_AS,1)`%**, con `r fc_frase_cambio(Delta_Año_TPartic_AS, 1, "pp.", 1e-2, 2)` interanual, y `r fc_frase_cambio(Delta_Mes_TPartic_AS,1, "pp.", 1e-2,1)`  respecto a la medición del trimestre móvil anterior.
+
+-	Por su parte, **la tasa de desocupación nacional se situó en un `r fc_Form_Num(Tasa_Act_TDescp_AS,1)`%, mostrando `r fc_frase_cambio(Delta_Año_TDescp_AS,1, "pp.", 1e-2,2)` interanual, y `r fc_frase_cambio(Delta_Mes_TDescp_AS,1, "pp.", 1e-2,2)`** respecto a la medición del trimestre móvil anterior. Esto es equivalente a `r fc_frase_cambio(Delta_Año_Dsocpds_AS,0, "personas", 9500,2)` desocupadas respecto al año anterior y `r fc_frase_cambio(Delta_Mes_Dsocpds_AS,0, "personas", 9500,2)` desocupadas respecto al trimestre anterior.  Particularmente, **la tasa de desocupación femenina se situó en `r fc_Form_Num(Tasa_Act_TDescp_M,1)`%, presentando `r fc_frase_cambio(Delta_Año_TDescp_M,1, "pp.", 1e-2,2)` interanual, y `r fc_frase_cambio(Delta_Mes_TDescp_M,1, "pp.", 1e-2,2)`** respecto del trimestre móvil anterior. Esto es equivalente a `r fc_frase_cambio(Delta_Año_Dsocpds_M,0, "mujeres", 4000,2)` desocupadas respecto al año anterior y `r fc_frase_cambio(Delta_Mes_Dsocpds_M,0, "mujeres", 4000,2)` desocupadas respecto al trimestre anterior.
+
+-	En doce meses, **los ocupados `r fc_frase_cambio(Delta_Año_Ocupdos_AS/Val_Act_Ocupdos_AS*100,1,"%",1e-2,3)`, lo que equivale a `r fc_Form_Num(Delta_Año_Ocupdos_AS,0)` personas a nivel nacional**. Al verlo por género, la ocupación en hombres `r fc_frase_cambio(Delta_Año_Ocupdos_H,0, "empleos", 5300,1)`, mientras que en mujeres presenta `r fc_frase_cambio(Delta_Año_Ocupdos_M,0, "empleos", 4000,2)`.
+
+- En cuanto al empleo formal, **en doce meses `r fc_frase_cambio(Delta_Año_OcupFrm_AS,0, "", 5500,1)` empleos formales a nivel nacional**, entre los cuales hay `r fc_frase_cambio(Delta_Año_OcupFrm_H,0, "empleos", 4000,2)` formales de los hombres y `r fc_frase_cambio(Delta_Año_OcupFrm_M,0, "", 3000,2)` empleos formales de las mujeres. Particularmente, los empleos formales dependientes `r fc_frase_cambio(Delta_Año_AslPrvF_AS+Delta_Año_AslPubF_AS+Delta_Año_SrvDomF_AS,0, "", 3000,3)`.
+
+- En el trimestre `r fc_fecha_a_trimestre(fecha_Actual)`, **la tasa de desocupación juvenil (15-24 años) se situó en `r fc_Form_Num(Tasa_Act_TDescp_J1524_AS, 1)`%**, cifra que `r fc_banda_razon(Tasa_Act_TDescp_J1524_AS, Tasa_Act_TDescp_AS, 1)` promedio nacional de `r fc_Form_Num(Tasa_Act_TDescp_AS, 1)`%, con `r fc_frase_cambio(Delta_Año_TDescp_J1524_AS, 1, "pp.", 1e-2, 2)` interanual. En términos de cantidades, los ocupados jóvenes experimentaron `r fc_frase_cambio(Delta_Año_Ocup_J1524_AS, 0, "personas", 1e-1, 2)` respecto al año anterior. Por su parte, **el grupo de 55 años y más presentó una tasa de desocupación de `r fc_Form_Num(Tasa_Act_TDescp_M55_AS, 1)`%**, `r fc_frase_cambio(Delta_Año_TDescp_M55_AS, 1, "pp.", 1e-2, 2)` interanual, con `r fc_frase_cambio(Delta_Año_Ocup_M55_AS, 0, "ocupados", 1e-1, 2)` en doce meses. En ambos grupos etarios extremos la tasa de informalidad es de al menos **`r fc_Form_Num(min(Tasa_Act_TInform_J1524_AS, Tasa_Act_TInform_M55_AS), 1)`%**, cifra que `r fc_banda_razon(min(Tasa_Act_TInform_J1524_AS, Tasa_Act_TInform_M55_AS), Tasa_Act_TInform_AS, 1)` promedio nacional de `r fc_Form_Num(Tasa_Act_TInform_AS, 1)`%.
+
+- **La brecha en la tasa de desocupación** fue de `r fc_Form_Num(Brecha_Act_TDescp2,1)` pp. mayor entre las mujeres que entre los hombres, y la brecha en la tasa de participación fue de `r fc_Form_Num(Brecha_Act_TPartic,1)` pp. menor para las mujeres.
+
+-	Respecto a la informalidad laboral, **la estimación de la tasa de ocupación informal fue de `r fc_Form_Num(Tasa_Act_TInform_AS,1)`%, mostrando `r fc_frase_cambio(Delta_Año_TInform_AS,1, "pp.", 1e-2,2)` interanual, y `r fc_frase_cambio(Delta_Mes_TInform_AS,1, "pp.", 1e-2,1)` respecto a la medición del trimestre móvil anterior**. En términos de cantidades, a la fecha, las personas ocupadas informales son `r fc_Form_Num(Val_Act_OcupInf_AS,0)` con `r fc_frase_cambio(Delta_Año_OcupInf_AS,0, "", 2500,2)` a nivel nacional respecto del mismo trimestre del año anterior, y `r fc_frase_cambio(Delta_Mes_OcupInf_AS,0, "", 2500,2)` respecto al trimestre anterior.
+
+```{r}
+  ft_Delta_indicadores
+```
+
+# **3. Evolución de las principales tasas del mercado laboral**
+
+En este punto se presenta la evolución histórica de las principales tasas del mercado laboral, considerando su trayectoria en el tiempo y sus variaciones interanuales, con el fin de complementar el análisis comparativo expuesto en las secciones anteriores.
+
+## *3.1. Evolución histórica de la tasa de desocupación*
+
+La evolución histórica de la tasa de desocupación permite observar su trayectoria de mediano y largo plazo, así como identificar cambios en su comportamiento interanual en distintos momentos del ciclo económico y laboral. Desde `r fc_fecha_a_trimestre(fecha11annos)`, `r fc_texto_tendencia("Tasa de desocupación", sexo = "AS", fecha_inicio = fecha11annos, mostrar_desde = FALSE, unidad = "pp")`, mientras que en el período más reciente `r fc_texto_tendencia("Tasa de desocupación", sexo = "AS", mostrar_desde = FALSE, unidad = "pp")`.
+
+
+```{r, fig.width=10, fig.height=6, dpi=300}
+  gr_Tasa_Desocup_2010_Actual
+```
+
+## *3.2. Evolución histórica de la tasa de participación*
+
+La evolución histórica de la tasa de participación permite caracterizar los cambios en la inserción de la población en la fuerza de trabajo, así como sus variaciones interanuales en distintos períodos. La tasa de participación alcanza un `r fc_Form_Num(Tasa_Act_TPartic_AS,1)`% a la fecha, lo que representa `r fc_frase_cambio(Delta_Covid_TPartic_AS, 1, "pp.", 1e-2, 2)` respecto del inicio de la pandemia. En 2020 la tasa retrocedió hasta un `r fc_Form_Num(Val_Covid_Centro_TPartic_AS,1)`%.
+
+```{r, fig.width=10, fig.height=6, dpi=300}
+  gr_Tasa_Particip_2010_Actual
+
+```
+# **4. Evolución de las principales Series del mercado laboral**
+
+## *4.1.	Evolución histórica de la ocupación*
+
+Entre `r fc_fecha_a_trimestre(fecha4annos)` y `r fc_fecha_a_trimestre(fecha_Actual)`, el número total de personas ocupadas pasó de `r fc_Form_Num(Val_Act_Ocupdos_2022,0)` a `r fc_Form_Num(Val_Act_Ocupdos_AS,0)`, es decir `r fc_Form_Num((Val_Act_Ocupdos_AS-Val_Act_Ocupdos_2022),0)` ocupados adicionales. En términos de magnitud, el empleo se concentra en ocupaciones formales: `r fc_Form_Num(Val_Act_OcupFrm_AS,0)` ocupados formales frente a `r fc_Form_Num(Val_Act_OcupInf_AS,0)` informales, de modo que el empleo formal representa `r fc_banda_proporcion(Val_Act_OcupFrm_AS, Val_Act_Ocupdos_AS, id = 10)` los ocupados.
+
+```{r, fig.width=10, fig.height=6, dpi=300}
+  gr_Ocupacion_2017_Actual
+```
+
+Al mirar la variación a doce meses, los ocupados totales `r fc_frase_cambio(Delta_Año_Ocupdos_AS, 0, "personas", 1e-1, 3)`, con `r fc_frase_cambio(Delta_Año_OcupInf_AS, 0, "personas", 1e-1, 2)` en ocupados informales y `r fc_frase_cambio(Delta_Año_OcupFrm_AS, 0, "personas", 1e-1, 2)` en ocupación formal. En el mismo período la fuerza de trabajo `r fc_frase_cambio(Delta_Año_FT_AS, 0, "personas", 1e-1, 5)` y la tasa de desocupación `r fc_frase_cambio(Delta_Año_TDescp_AS, 1, "pp.", 1e-2, 5)`.
+
+```{r, fig.width=10, fig.height=6, dpi=300}
+  gr_Delta_Ocupados_Inf_12m
+```
+
+## *4.2. Analisis de informalidad e informalidad asalariada*
+
+La tasa de ocupación de asalariados informales se ubicó en `r fc_Form_Num(Tasa_Act_AslDpnI_AS,1)`%, registrando `r fc_frase_cambio(Delta_Año_TAsalDpnI_AS, 1, "pp.", 1e-2, 2)` respecto del año anterior. En mujeres, la tasa `r fc_frase_cambio(Delta_Año_TAsalDpnI_M, 1, "pp.", 1e-2, 5)` interanual, situándose en `r fc_Form_Num(Tasa_Act_AslDpnI_M,1)`% en el trimestre actual. En magnitudes, las personas asalariadas informales alcanzaron `r fc_Form_Num(Val_Act_AslDpnI_AS,0)` a nivel nacional y `r fc_frase_cambio(Delta_Año_AslDpnI_AS, 0, "personas", 1e-2, 6)` en doce meses, con `r fc_Form_Num(Delta_Año_AslDpnI_AS-Delta_Año_AslDpnI_M,0)` en hombres y `r fc_Form_Num(Delta_Año_AslDpnI_M,0)` en mujeres.
+
+```{r, fig.width=10, fig.height=6, dpi=300}
+  gr_asal_dep_inf_Sexo
+```
+
+Al desagregar la variación del empleo por categoría ocupacional, los ocupados `r fc_frase_cambio(Delta_Año_Ocupdos_AS, 0, "personas", 1e-1, 3)` en doce meses, con `r fc_frase_cambio(Delta_Año_AslFrm_AS, 0, "personas", 1e-1, 2)` en asalariados formales, `r fc_frase_cambio(Delta_Año_AslDpnI_AS, 0, "personas", 1e-1, 2)` en asalariados informales y `r fc_frase_cambio(Delta_Año_Cprop_AS, 0, "personas", 1e-1, 2)` en trabajadores por cuenta propia.
+
+```{r, fig.width=10, fig.height=6, dpi=300}
+  gr_delta_Ocup_incid_categ
+```
+
+```{r, results='asis'}
+if (tiene_desest) cat(knitr::knit_child(file.path("intermedios", "modulo_desest_principal.qmd"), quiet = TRUE))
+```
+
+# **5. Análisis por segmentos**
+
+## **5.1 Análisis de las Razones de no Participación**
+
+Respecto de la participación laboral femenina, esta registra `r fc_frase_cambio(Delta_Covid_TPartic_M, 1, "pp.", 1e-2, 2)` desde el fin del COVID, alcanzando `r fc_Form_Num(Tasa_Act_TPartic_M,1)`% en el último trimestre, frente a un `r fc_Form_Num(Val_Covid_TPartic_M,1)`% previo a la pandemia. En 2020 la tasa retrocedió en `r fc_Form_Num(Delta_Covid_Caida_TPartic_M,1)` pp, llegando a un nivel de `r fc_Form_Num(Val_Covid_Centro_TPartic_M,1)`%.
+
+Teniendo en cuenta que las *razones familiares permanentes* son `r fc_banda_proporcion(Porc_FFTFamil_M/100, id = 10)` origen femenino, lo que contribuye a explicar las menores tasas de participación laboral en mujeres. Un mayor detalle se presenta en la tabla siguiente.
+
+La brecha de participación entre ambos sexos alcanza `r fc_Form_Num(Brecha_Act_TPartic,1)` pp.: `r fc_Form_Num(Tasa_Act_TPartic_H,1)`% para hombres y `r fc_Form_Num(Tasa_Act_TPartic_M,1)`% para mujeres. Detrás de este fenómeno, las razones de cuidado tienen una alta incidencia: `r fc_Form_Num(Val_FFTFamil_M,0)` mujeres se encuentran fuera del mercado laboral por este motivo, y las mujeres representan el `r fc_Form_Num(Porc_FFTFamil_M,1)`% del total de personas inactivas por razones de cuidado.
+
+```{r tabla-fft2, echo=FALSE}
+  ft_Razon_FFT
+```
+
+```{r, fig.width=10, fig.height=6, dpi=300}
+  gr_Razon_No_part
+```
+
+
+## **5.2 Indicadores del mercado laboral por grupos de edad**
+
+La tabla presenta los principales indicadores laborales para la población de 15 a 24 años en el trimestre `r fc_fecha_a_trimestre(fecha_Actual)`. Los jóvenes exhiben la situación más precaria del mercado laboral: la tasa de desocupación de `r fc_Form_Num(Tasa_Act_TDescp_J1524_AS, 1)`% `r fc_banda_razon(Tasa_Act_TDescp_J1524_AS, Tasa_Act_TDescp_AS, 1)` promedio nacional de `r fc_Form_Num(Tasa_Act_TDescp_AS, 1)`%, mientras que la tasa de informalidad alcanza `r fc_Form_Num(Tasa_Act_TInform_J1524_AS, 1)`%, cifra que supera el `r fc_Form_Num(Tasa_Act_TInform_AS, 1)`% nacional. En términos interanuales, los ocupados jóvenes presentan `r fc_frase_cambio(Delta_Año_Ocup_J1524_AS, 0, "personas", 5000, 2)`, evolución que contrasta con el aumento de `r fc_Form_Num(Delta_Año_Ocupdos_AS, 0)` empleos en el total nacional. La brecha de género dentro del grupo es pronunciada: las mujeres jóvenes presentan una tasa de desocupación de `r fc_Form_Num(Tasa_Act_TDescp_J1524_M, 1)`%, `r fc_Form_Num(abs(Brecha_Act_TDescp_J1524), 1)` pp. `r if (Brecha_Act_TDescp_J1524 < 0) "por encima" else "por debajo"` de los hombres del mismo grupo (`r fc_Form_Num(Tasa_Act_TDescp_J1524_H, 1)`%).
+
+```{r}
+  ft_Edad_1524
+```
+
+La tabla presenta los principales indicadores laborales para la población de 55 años y más en el trimestre `r fc_fecha_a_trimestre(fecha_Actual)`. A diferencia del grupo juvenil, este segmento presenta señales favorables en empleo: la ocupación `r fc_frase_cambio(Delta_Año_Ocup_M55_AS, 0, "personas", 5000, 1)` en doce meses y la tasa de desocupación se situó en `r fc_Form_Num(Tasa_Act_TDescp_M55_AS, 1)`%, con `r fc_frase_cambio(Delta_Año_TDescp_M55_AS, 1, "pp.", 1e-2, 2)` interanual. La participación laboral del grupo se situó en `r fc_Form_Num(Tasa_Act_TPartic_M55_AS, 1)`%, con `r fc_frase_cambio(Delta_Año_TPartic_M55_AS, 1, "pp.", 1e-2, 2)` interanual, evolución consistente con el envejecimiento de la fuerza laboral y el retraso en la edad efectiva de retiro. Su tasa de informalidad alcanza `r fc_Form_Num(Tasa_Act_TInform_M55_AS, 1)`% frente al `r fc_Form_Num(Tasa_Act_TInform_AS, 1)`% nacional, aunque esa cifra debe leerse con la cautela que se detalla más abajo: quien ya jubiló no está obligado a cotizar, de modo que una parte del registro como empleo informal en este segmento responde a la definición del indicador y no a las condiciones del puesto.
+
+```{r}
+  ft_Edad_55mas
+```
+
+El gráfico presenta la evolución histórica de la tasa de desocupación para tres grupos: jóvenes de 15 a 24 años, personas de 55 años y más, y el total nacional. En el trimestre `r fc_fecha_a_trimestre(fecha_Actual)` la desocupación juvenil alcanzó **`r fc_Form_Num(Tasa_Act_TDescp_J1524_AS, 1)`%**, frente a `r fc_Form_Num(Tasa_Act_TDescp_M55_AS, 1)`% en el grupo de 55 años y más y `r fc_Form_Num(Tasa_Act_TDescp_AS, 1)`% en el total nacional. Pero la diferencia relevante no está en el nivel sino en la trayectoria: en el período vigente la desocupación juvenil crece a razón de `r fc_Form_Num(Pend_Desoc_Jov, 2)` puntos porcentuales anuales, frente a `r fc_Form_Num(Pend_Desoc_Tot, 2)` del total nacional y `r fc_Form_Num(Pend_Desoc_May, 2)` del grupo de mayor edad. `r if (!is.na(Razon_Pend_Desoc) && Razon_Pend_Desoc > 2) paste0("El deterioro juvenil avanza así ", fc_Form_Num(Razon_Pend_Desoc, 1), " veces más rápido que el del mercado en su conjunto: no se trata de una recuperación desigual, sino de un segmento que se desacopla de la trayectoria general.") else "Las tres trayectorias avanzan a un ritmo comparable."` Medido en términos relativos, la elasticidad arco interanual alcanza `r fc_Form_Num(Elast_Desoc_Jov$elasticidad, 2)`.
+
+```{r, fig.width=10, fig.height=6, dpi=300}
+gr_Tasa_Desocup_Edad
+```
+
+El gráfico muestra la evolución histórica de la tasa de participación laboral para los mismos tres grupos. En el trimestre actual, los jóvenes de 15 a 24 años participaron a una tasa de `r fc_Form_Num(Tasa_Act_TPartic_J1524_AS, 1)`%, el grupo de 55 años y más alcanzó `r fc_Form_Num(Tasa_Act_TPartic_M55_AS, 1)`% y el total nacional `r fc_Form_Num(Tasa_Act_TPartic_AS, 1)`%. `r if (Partic_Jov_SeAplano) paste0("El dato relevante es un cambio de tendencia: la participación juvenil venía cayendo a razón de ", fc_Form_Num(abs(Pend_Partic_Jov_Prev), 2), " puntos anuales en el tramo anterior y en el vigente lo hace a ", fc_Form_Num(abs(Pend_Partic_Jov), 2), ", de modo que la salida sostenida de jóvenes del mercado laboral prácticamente se detuvo.") else paste0("La participación juvenil se mueve a razón de ", fc_Form_Num(Pend_Partic_Jov, 2), " puntos anuales en el tramo vigente.")` Mientras tanto, el total nacional avanza a `r fc_Form_Num(Pend_Partic_Tot, 2)` puntos anuales.
+
+Ambos gráficos describen un mismo fenómeno. Mientras los jóvenes seguían saliendo del mercado, esa salida descomprimía la medición: quien se retira no cuenta como desocupado. Al detenerse, el deterioro de la demanda —`r fc_Form_Num(abs(Delta_Año_Ocup_J1524_AS), 0)` ocupados jóvenes menos en doce meses— se traduce en desocupación y ya no en inactividad.
+
+```{r, fig.width=10, fig.height=6, dpi=300}
+gr_Tasa_Partic_Edad
+```
+
+El gráfico muestra la tasa de informalidad por tramo quinquenal de edad para hombres y mujeres en el trimestre `r fc_fecha_a_trimestre(fecha_Actual)`. `r if (U_H$es_u && U_M_ef$es_u) paste0("Ambas curvas describen un patrón en U pronunciado. En hombres, la informalidad parte en ", fc_Form_Num(U_H$ext_1, 1), "% en el tramo **", U_H$ext_1_tramo, "**, desciende hasta ", fc_Form_Num(U_H$min_val, 1), "% en **", U_H$min_tramo, "** y repunta ", fc_Form_Num(U_H$repunte, 1), " puntos hasta ", fc_Form_Num(U_H$ext_n, 1), "% en el tramo de mayor edad. En mujeres el mínimo se alcanza en **", U_M_ef$min_tramo, "** con ", fc_Form_Num(U_M_ef$min_val, 1), "%, y el repunte llega a ", fc_Form_Num(U_M_ef$repunte, 1), " puntos.") else paste0("La curva masculina describe un patrón ", U_H$forma, " y la femenina uno ", U_M_ef$forma, ".")` `r if (U_H$es_u && U_M_ef$es_u && U_M_ef$min_tramo != U_H$min_tramo) "Que el punto más bajo llegue antes en mujeres implica que su informalidad empieza a crecer en tramos más tempranos, donde se concentran la maternidad y las responsabilidades de cuidado que este informe documenta en la sección de razones de no participación." else ""` La rama derecha corresponde a una reinserción que rara vez recupera la calidad del empleo previo.
+
+**Sobre los tramos mayores.** La ENE clasifica como informal a quien no cotiza, y quien jubiló no está obligado a hacerlo: puede conservar el mismo empleo y el mismo contrato, y pasar a contarse como informal. El salto desde `r tramo_jubilacion_M` en mujeres y `r tramo_jubilacion_AS` en hombres mezcla precarización con ese efecto de definición, y los datos publicados no permiten separarlos. La lectura de deterioro se sostiene hasta 55-59 años; más allá, no.
+
+```{r, fig.width=10, fig.height=6, dpi=300}
+gr_Informalidad_Edad_EF
+```
+
+## **5.3 Composición de la demanda laboral por Tamaño de Empresa e Informalidad**
+
+La informalidad no se distribuye de manera pareja entre las empresas: depende fuertemente de su tamaño. En la microempresa alcanza `r fc_Form_Num(Tasa_Act_TInform_Micro_AS, 1)`%, cifra que `r fc_banda_razon(Tasa_Act_TInform_Micro_AS, Tasa_Act_TInform_GranEmp_AS, 1)` `r fc_Form_Num(Tasa_Act_TInform_GranEmp_AS, 1)`% de la gran empresa, que se sitúa en el extremo opuesto con `r fc_frase_cambio(Delta_Año_TInform_GranEmp_AS, 1, "pp.", 1e-2, 2)` interanual. La tabla siguiente detalla los ocupados de cada tamaño según su condición de formalidad, y permite ver que una tasa a la baja no siempre significa lo mismo.
+
+```{r, fig.width=10, fig.height=6, dpi=300}
+  ft_Tamano_Formalidad
+```
+
+El gráfico ordena esas mismas magnitudes y permite ver el peso de cada segmento en el empleo total.
+
+```{r, fig.width=10, fig.height=6, dpi=300}
+  gr_Tamano_Barras
+```
+
+Expresadas como tasa, las diferencias entre tamaños se vuelven más nítidas. Pero la cifra neta de cada segmento esconde cuánto se movió por dentro: lo relevante no es solo cuánto creció o cayó un tamaño, sino qué pasó con la composición entre empleo formal e informal.
+
+La microempresa creció en `r fc_Form_Num(c_micro$total, 0)` ocupados en doce meses, aunque `r fc_Form_Num(Micro_Pct_NuevoInf, 0)`% de ese aumento corresponde a empleo informal, de modo que su expansión profundiza el patrón de desprotección antes que corregirlo. La pequeña empresa muestra el movimiento más intenso de la tabla: perdió `r fc_Form_Num(abs(c_peq$partes[["Formal"]]), 0)` empleos formales y ganó `r fc_Form_Num(c_peq$partes[["Informal"]], 0)` informales, de manera que la informalidad contuvo cerca de `r fc_Form_Num(c_peq$absorbe, 0)`% de la pérdida formal y la caída neta quedó en `r fc_Form_Num(abs(c_peq$total), 0)`. Detrás de esa cifra hubo `r fc_Form_Num(c_peq$bruto, 0)` personas que cambiaron de condición: `r fc_Form_Num(c_peq$razon_bn, 1)` veces el movimiento que la cifra neta sugiere. La mediana empresa recorre el mismo camino con menos amortiguación —absorbe `r fc_Form_Num(c_med$absorbe, 0)`% de su pérdida formal— mientras que la gran empresa reduce ambos tipos de empleo a la vez, de modo que su menor informalidad no es formalización sino arrastre de un segmento que se contrae.
+
+```{r, fig.width=10, fig.height=6, dpi=300}
+  gr_Tamano_Tasa_Informalidad
+```
+
+El gráfico siguiente mira la composición del empleo por tamaño de empresa desde dos ángulos, y el contraste entre ambos paneles es el punto: la informalidad no está repartida entre los tamaños, se concentra en los más pequeños. La microempresa reúne `r fc_banda_proporcion(Val_Act_Micro_AS, Val_Act_Ocupdos_AS, id = 10)` los ocupados del país, pero `r fc_banda_proporcion(Val_Act_MicroInf_AS, Val_Act_OcupInf_AS, id = 10)` los ocupados informales. En el panel izquierdo la estructura es estable y los cuatro segmentos mantienen participaciones parecidas; en el derecho, la franja de microempresa pasa de ocupar poco más de un tercio a cubrir tres cuartos del gráfico.
+
+```{r, fig.width=10, fig.height=5, dpi=300}
+gr_Tamano_Area_Comparada
+```
+
+Dicho de otro modo, tres de cada cuatro empleos informales del país están en microempresas, proporción estable en toda la serie: la concentración no es un efecto reciente ni coyuntural, sino un rasgo estructural de cómo se distribuye el empleo desprotegido en Chile. Un mismo esfuerzo de formalización tiene por tanto rendimientos muy distintos según dónde se aplique.
+
+## **5.4 Sectores económicos: feminización e informalidad**
+
+La heterogeneidad del mercado laboral queda clara al mirar por rama de actividad económica, tanto al revisar su nivel de informalidad como la feminización de su fuerza de trabajo ocupada. 
+
+La primera tabla ordena las ramas por su grado de informalidad, que va desde `r fc_Form_Num(Rama_Inf_AltaVal, 1)`% en `r Rama_Inf_Alta` hasta `r fc_Form_Num(Rama_Inf_BajaVal, 1)`% en `r Rama_Inf_Baja`, frente a un `r fc_Form_Num(Tasa_Act_TInform_AS, 1)`% nacional.
+
+```{r}
+ft_Sector_Informalidad
+```
+La segunda mide el nivel de feminización, que va desde `r fc_Form_Num(Rama_Fem_AltaVal, 1)`% en `r Rama_Fem_Alta` hasta `r fc_Form_Num(Rama_Fem_BajaVal, 1)`% en `r Rama_Fem_Baja`. Leídas en conjunto, permiten contrastar el grado de informalidad de cada rama con la composición por sexo de su fuerza de trabajo.
+
+```{r}
+ft_Sector_Feminizacion
+```
+
+La brecha de género en la informalidad (hombres menos mujeres) varía de rama en rama: en `r N_Ramas_BrechaInf_Hombres` de las `r N_Ramas_Brecha_Inf` ramas con dato disponible los hombres presentan mayor informalidad relativa, mientras que en las `r N_Ramas_BrechaInf_Mujeres` restantes ocurre lo contrario. `r if (Hay_Rama_MayorBrechaInf) paste0("Entre las ramas con base suficiente, la brecha más pronunciada se observa en **", Rama_MayorBrechaInf, "**, con ", fc_Form_Num(Valor_MayorBrechaInf, 1), " p.p. a favor de ", if (Signo_MayorBrechaInf > 0) "las mujeres" else "los hombres", ".") else "Ninguna rama alcanza la base mínima definida para identificar una brecha sectorial predominante; la tabla se mantiene como referencia descriptiva."` `r if (abs(N_Ramas_BrechaInf_Hombres - N_Ramas_BrechaInf_Mujeres) <= 2) "Esta dispersión bidireccional no muestra un patrón sistemático por sexo, por lo que no existe evidencia de una relación directa entre informalidad y feminización." else if (N_Ramas_BrechaInf_Hombres > N_Ramas_BrechaInf_Mujeres) "La mayoría de las ramas muestra mayor informalidad masculina, patrón sistemático que sugiere una relación entre sexo e informalidad que trasciende la rama de actividad." else "La mayoría de las ramas muestra mayor informalidad femenina, patrón sistemático que sugiere una relación entre sexo e informalidad que trasciende la rama de actividad."`
+
+```{r}
+ft_Sector_Brecha_Inf
+```
+
+## **5.5 Análisis Agrupado por Macro-Áreas Económicas: Informalidad y Feminización**
+
+Para evitar la dispersión que generan las ramas individuales y capturar la tendencia estructural y de fondo del mercado laboral, se consolidan las actividades económicas en `r N_Areas_Analizadas` grandes Macro-Áreas. Este enfoque metodológico permite evaluar si la precarización y los sesgos de género responden a lógicas sectoriales transversales.
+
+- Servicios Públicos y de Protección Social: (Enseñanza, Salud, Administración Pública).
+- Servicios Personales, Comunitarios y del Hogar: (Hogares, Otras actividades de servicios, Servicios administrativos y de apoyo, Actividades artísticas).
+- Servicios a Empresas y Profesionales: (Financiero, Profesional/científico, Inmobiliario, Información y comunicaciones, Organizaciones extraterritoriales).
+- Comercio, Transportes y Hotelería: (Comercio, Alojamiento/Comidas, Transporte, Almacenamiento). 
+- Sectores Productivos, Extractivos e Industriales: (Minería, Manufactura, Agricultura, Electricidad/Agua).
+- Construcción e Infraestructura: (Debido a su comportamiento procíclico y demografía laboral única).  
+
+```{r}
+ft_Area_Informalidad
+```
+
+La segunda dimensión mide el nivel de inserción de las mujeres. Leídas en conjunto, ambas variables permiten observar si las Macro-Áreas más feminizadas coinciden estructuralmente con aquellas de mayor informalidad.
+
+```{r}
+ft_Area_Feminizacion
+```
+
+Finalmente, se cruza el comportamiento de las áreas —manteniendo el orden decreciente de informalidad— para identificar si los macro sectores más precarizados registran brechas internas que afecten más a hombres o a mujeres. La brecha se calcula como: Brecha X = X Hombres - X Mujeres.
+
+```{r}
+ft_Area_Brecha_Inf
+```
+
+
+**Conclusiones del análisis por Macro-Áreas**
+
+Al mirar el mapa desde la perspectiva de Macro-Áreas, con criterio de segmentación institucional, emergen las siguientes lecturas que las ramas individuales no permiten distinguir:
+
+**La macro-área más informal, y el caso que no sigue el patrón:** el área con mayor informalidad es **`r Area_Inf_Nom`**, con `r fc_Form_Num(Area_Inf_Val, 1)`%, y es a la vez una de las más `r if (Area_Inf_EsFem) "feminizadas" else "masculinizadas"` de la economía, con `r fc_Form_Num(Area_Inf_Fem, 1)`% de participación femenina. **`r Area_Ctr_Nom`** presenta un patrón distinto: con `r fc_Form_Num(Area_Ctr_Val, 1)`% de informalidad ocupa el lugar `r Area_Ctr_Rank` de la tabla, siendo `r if (Area_Inf_EsFem) "una de las menos feminizadas" else "una de las más feminizadas"` con `r fc_Form_Num(Area_Ctr_Fem, 1)`% de participación femenina, y su brecha interna de informalidad afecta más a `r if (Area_Ctr_Br > 0) "los hombres" else "las mujeres"`, con `r fc_Form_Num(abs(Area_Ctr_Br), 1)` puntos. Esto indica que la informalidad puede ser aguda con independencia de la composición por sexo de la macro-área. Aun cuando el mecanismo de habilitación empuja a la formalización, alcanza a un subgrupo minoritario de trabajadores del sector, insuficiente para modificar su nivel agregado de informalidad.
+
+**Tres servicios que se anulaban entre sí:**  agregados en un solo bloque, los servicios institucionales, los profesionales y los personales producían un promedio que no representaba a ninguno. Separados, aparecen en los dos extremos del mapa de informalidad de toda la economía, con una distancia interna de `r fc_Form_Num(Inf_ServPersonales - Inf_ServEmpresas, 1)` puntos entre el más formal y el más precarizado.
+
+* **Servicios Públicos y de Protección Social** funciona como el gran bastión del empleo formal femenino (`r fc_Form_Num(Fem_ServPublicos, 1)`% de feminización), con una informalidad de `r fc_Form_Num(Inf_ServPublicos, 1)`% gracias a la regulación estatal en educación, salud y administración.
+* **Servicios a Empresas y Profesionales** logra una informalidad todavía más baja, de `r fc_Form_Num(Inf_ServEmpresas, 1)`%, sin depender del Estado como empleador. La disciplina proviene de reguladores sectoriales —SEC, CMF, licencias de operación— que actúan de oficio y con anterioridad al hecho, porque su mandato es resguardar a terceros ajenos a la relación laboral: el usuario de una instalación, el inversionista, quien recibe la obra. Para autorizar, exigen acreditar quién ejecutó y con qué habilitación, y esa exigencia de trazabilidad arrastra consigo la documentación del vínculo laboral. La formalidad emerge así como subproducto de una protección dirigida a otros, y no de la naturaleza pública o privada del empleador.
+* Por el otro extremo, al aislar los **Servicios Personales, Comunitarios y del Hogar** —donde la fiscalización opera por denuncia del propio trabajador y no de oficio, porque el riesgo de una relación laboral no documentada se agota en él y no alcanza a terceros—, se evidencia la zona de mayor precarización de toda la economía, con una informalidad que trepa al `r fc_Form_Num(Inf_ServPersonales, 1)`%. Además, este bloque es mayoritariamente femenino (`r fc_Form_Num(Fem_ServPersonales, 1)`% de feminización) y presenta una brecha de género inversa de `r fc_Form_Num(Brecha_ServPersonales, 1)` puntos, evidenciando que, por el peso femenino de estas actividades, `r fc_banda_proporcion(Fem_ServPersonales/100, id = 10)` la desprotección laboral de esta macro-área recae sobre mujeres.
+* **La herencia normativa del trabajo en casa particular:** el nivel de informalidad de Servicios Personales, Comunitarios y del Hogar no se explica solo por su composición actual. El trabajo en casa particular mantuvo durante décadas un estatuto laboral diferenciado en jornada y remuneración mínima, equiparado al régimen general recién en 2014, lo que ayuda a entender la persistencia de condiciones más precarias en un sector mayoritariamente femenino.
+* **La zona crítica masiva (Comercio y Servicios de Consumo):** El área de **Comercio, Transportes y Hotelería** se consolida como el principal desafío para las políticas públicas. Concentra `r fc_Form_Num(Area_Vol_Val, 0)` ocupados, `r fc_banda_proporcion(Area_Vol_Pct, id = 10)` los ocupados del país), presenta una composición de género equilibrada (`r fc_Form_Num(Fem_Comercio, 1)`% de mujeres), pero arrastra una informalidad de `r fc_Form_Num(Inf_Comercio, 1)`%, cifra que `r fc_banda_razon(Inf_Comercio, Tasa_Act_TInform_AS, 1)` promedio nacional. La combinación de alto volumen, informalidad elevada y brechas internas estrechas (`r fc_Form_Num(Brecha_Comercio, 1)`) hace de esta macro-área la de mayor alcance potencial para estrategias de fiscalización y formalización laboral, con efectos que alcanzarían de forma similar a hombres y mujeres.
+
+
+## **5.6 Tiempo de Duración de la Cesantía**
+
+El tramo **"`r Tramo_MayorStock`"** concentra a `r Pct_Tramo_MayorStock`% de los desocupados por duración. Como los tramos tienen anchos distintos, esa concentración podría ser un efecto del rango y no del fenómeno; medida en personas por mes de tramo, la mayor densidad sigue estando en **"`r Tramo_MasDenso`"**, con `r fc_Form_Num(Densidad_MasDenso, 0)` personas por mes, de modo que la concentración es real y no un artefacto de la construcción de la tabla. La mediana de duración de la cesantía se sitúa en torno a `r if (is.na(Mediana_DurDesempleo)) "más de 18" else fc_Form_Num(Mediana_DurDesempleo, 1)` meses.
+
+En el otro extremo de la distribución, `r fc_Form_Num(Val_LargaDuracion, 0)` personas llevan más de doce meses buscando trabajo, esto es `r fc_Form_Num(Pct_LargaDuracion, 1)`% del total de desocupados con duración declarada. Es el umbral que la literatura y los programas de empleo usan para definir el desempleo de larga duración, y agrupa a quienes enfrentan la mayor dificultad de reinserción: mientras más se prolonga la búsqueda, menor es la probabilidad de encontrar empleo y mayor el deterioro de las competencias laborales.
+
+El mayor movimiento trimestral de toda la tabla se observa en **"`r Tramo_MayorAlzaMensual`"**, que registró el mayor aumento, mientras que **"`r Tramo_MayorCaidaMensual`"** fue el tramo con la mayor caída en el trimestre. En términos interanuales, la mayoría de los tramos creció respecto al año anterior, con la excepción de `r Texto_Tramos_CaidaInteranual`.
+
+```{r}
+ft_DurDesempleo
+```
+
+El gráfico muestra la composición de los desocupados según duración de la cesantía desde `r fc_fecha_a_trimestre(min(base_comp_dur_desempleo$fecha))`. El peso relativo del tramo "`r Tramo_MayorAlzaMensual`" pasó de `r fc_Form_Num(DurTop_Pct_Ini, 1)`% al inicio de la serie a `r fc_Form_Num(DurTop_Pct_Act, 1)`% en el trimestre actual.
+
+```{r, fig.width=10, fig.height=6, dpi=300}
+gr_Comp_DurDesempleo
+```
+
+Desagregada por sexo, la distribución permite contrastar si el perfil de duración es el mismo en ambos casos. `r if (Mismo_Tramo_Mayor) paste0("El tramo con mayor número de desocupados coincide, \"", Tramo_MayorStock_H, "\", de modo que el punto de mayor concentración no distingue por sexo") else paste0("El tramo con mayor número de desocupados difiere: \"", Tramo_MayorStock_H, "\" en hombres y \"", Tramo_MayorStock_M, "\" en mujeres")`. En la cola larga de la distribución, `r fc_Form_Num(Pct_LargaDuracion_M, 1)`% de las mujeres desocupadas lleva más de doce meses buscando trabajo, frente a `r fc_Form_Num(Pct_LargaDuracion_H, 1)`% de los hombres.
+
+```{r}
+ft_DurDesempleo_Sexo
+```
+
+`r if (abs(Brecha_LargaDuracion) < 1) { paste0("Ambas cifras son prácticamente equivalentes: la diferencia alcanza ", fc_Form_Num(abs(Brecha_LargaDuracion), 1), " puntos porcentuales, de modo que el desempleo de larga duración afecta a hombres y mujeres en proporciones similares.") } else { paste0("La diferencia alcanza ", fc_Form_Num(abs(Brecha_LargaDuracion), 1), " puntos porcentuales, con ", if (Brecha_LargaDuracion > 0) "las mujeres" else "los hombres", " sobrerrepresentadas en los tramos de búsqueda más prolongada.") }` La duración de la cesantía opera de forma acumulativa: mientras más se prolonga la búsqueda, menor es la probabilidad de reinserción y mayor el deterioro de las competencias laborales. `r if (abs(Brecha_LargaDuracion) >= 1) "Una misma tasa de desocupación tiene entonces consecuencias distintas según sexo, y la reinserción enfrenta un problema de composición además de uno de nivel." else "Con una composición pareja entre tramos, el desafío de reinserción es de nivel antes que de composición."`
+
+{{< pagebreak >}}
+
+# **Anexos**
+
+## *Anexo 1. Sector Económico*
+
+```{r, results='asis'}
+if (es_informe_regional) cat(knitr::knit_child(file.path("intermedios", "modulo_sector_territorial.qmd"), quiet = TRUE))
+```
+
+La tabla presenta el nivel de empleo formal por sector económico en el trimestre móvil `r fc_fecha_a_trimestre(fecha_Actual)` y su variación respecto del trimestre anterior y de doce meses atrás. 
+
+Respecto del trimestre anterior, `r fc_texto_sector(SecMes)`
+
+En doce meses, `r fc_texto_sector(SecAno)`
+
+```{r, fig.width=10, fig.height=6, dpi=300}
+  ft_Empleos_Sector_y_d12m
+```
+
+{{< pagebreak >}}
+
+## *Anexo 2. Regiones*
+
+```{r, results='asis'}
+if (es_informe_regional) cat(knitr::knit_child(file.path("intermedios", "modulo_ranking_territorial.qmd"), quiet = TRUE))
+```
+
+La tabla presenta la tasa de desocupación por región. `r fc_texto_region(RegDesoc)`
+
+```{r, fig.width=10, fig.height=6, dpi=300}
+  ft_TDesocup_Region_m_y_d12m
+```
+
+La tabla presenta la tasa de ocupación informal por región. `r fc_texto_region(RegInform)`
+
+```{r, fig.width=10, fig.height=6, dpi=300}
+  ft_TInform_Region
+```
+
+La tabla presenta la tasa de asalariados dependientes informales por región, complementando el análisis anterior al centrarse en la relación laboral dependiente. `r fc_texto_region(RegAsalI)`
+
+```{r, fig.width=10, fig.height=6, dpi=300}
+  ft_TAsal_dep_Inform_Region
+```
+
+La tabla presenta el nivel de desocupados por región, complementando los análisis anteriores. `r fc_texto_region_nivel(RegDesocN)`
+
+```{r, fig.width=10, fig.height=6, dpi=300}
+  ft_Desocupados_Region
+```
+## *Anexo 3. Resumen indicadores varios*
+
+Las tablas presentan los principales indicadores laborales del mercado del trabajo comparando un trimestre, un año y post-COVID con `r fc_fecha_a_trimestre(fecha_Actual)`. La columna Diferencia refleja el cambio entre el período base y el actual: valores positivos indican aumento y valores negativos disminución del indicador respectivo.
+
+Respecto del trimestre anterior. `r fc_texto_as(AsMes)`
+
+```{r}
+  ft_IndVarios_DMes_AS
+```
+
+En doce meses. `r fc_texto_as(AsAno)`
+
+```{r}
+  ft_IndVarios_DAnno_AS
+```
+
+Desde el inicio del período post-COVID. `r fc_texto_as(AsPre)`
+
+```{r}
+  ft_IndVarios_DPostCovid_AS
+```
+
+## *Anexo 4. Resumen análisis de brecha*
+
+Respecto del trimestre anterior. `r fc_texto_brecha(BrMes, "el trimestre anterior")` Valores negativos indican mayor presencia o nivel femenino en el indicador respectivo. La columna Diferencia refleja el cambio de la brecha entre ambos trimestres, y el color indica si esta se acortó (verde) o se ensanchó (rojo) en términos absolutos, sin juzgar a favor de qué sexo. El signo de la Diferencia no lo determina por sí solo: una variación negativa puede corresponder tanto a un cierre como a un ensanchamiento, según el signo de la brecha de partida. En los indicadores de nivel el acortamiento debe leerse con cautela, porque recoge además el distinto tamaño de la población de referencia de cada sexo, de modo que puede originarse en un deterioro del indicador femenino y no en una mejora. Las tasas, normalizadas por la población de referencia de cada sexo, no presentan esa ambigüedad. La brecha de Población en edad de trabajar es de origen demográfico y se presenta sin color.
+
+```{r}
+  ft_IndVarios_DMes_Brecha
+```
+
+En doce meses. `r fc_texto_brecha(BrAno, "un año atrás")`
+
+```{r}
+  ft_IndVarios_DAnno_Brecha
+```
+
+Desde el inicio del período post-COVID. `r fc_texto_brecha(BrPre, "al inicio del período")` El contraste más relevante se da entre participación e informalidad: la brecha de participación se redujo `r fc_Form_Num(abs(BrPre_TPartic),1)` pp. mientras la de informalidad se amplió `r fc_Form_Num(abs(BrPre_TInform),1)` pp., de modo que la mayor incorporación femenina al mercado laboral coincide con un aumento de su informalidad relativa.
+
+```{r}
+  ft_IndVarios_DPostCovid_Brecha
+```
+
+
+
+
+El gráfico presenta la tasa de informalidad por tramo quinquenal de edad para ambos sexos, comparando tres períodos de referencia. `r if (U_AS$es_u) paste0("La curva describe un patrón en U pronunciado: parte en ", fc_Form_Num(U_AS$ext_1, 1), "% en el tramo **", U_AS$ext_1_tramo, "**, desciende hasta un mínimo de ", fc_Form_Num(U_AS$min_val, 1), "% en **", U_AS$min_tramo, "** y vuelve a subir hasta ", fc_Form_Num(U_AS$ext_n, 1), "% en **", U_AS$ext_n_tramo, "**, un repunte de ", fc_Form_Num(U_AS$repunte, 1), " puntos porcentuales desde el fondo de la curva.") else paste0("La curva describe un patrón ", U_AS$forma, ": el mínimo se ubica en **", U_AS$min_tramo, "** con ", fc_Form_Num(U_AS$min_val, 1), "%, y los extremos alcanzan ", fc_Form_Num(U_AS$ext_1, 1), "% y ", fc_Form_Num(U_AS$ext_n, 1), "%.")` Las dos ramas responden a causas distintas: la izquierda refleja las condiciones de entrada al mercado laboral, donde el trabajo ocasional coexiste con el estudio; la derecha, un proceso de reinserción que rara vez recupera la calidad del empleo previo.
+
+**Sobre la comparabilidad de los tramos mayores.** Las cifras de los últimos tramos no son directamente comparables con las del núcleo de la vida laboral. La ENE clasifica como informal a quien no cotiza, y una persona jubilada no está obligada a hacerlo: puede conservar el mismo empleo, el mismo contrato y el mismo empleador, y pasar a contabilizarse como informal el día que jubila. El salto que se observa a partir de `r tramo_jubilacion_M` en mujeres y de `r tramo_jubilacion_AS` en hombres mezcla, por tanto, precarización efectiva con un efecto de definición que los datos publicados no permiten separar. La lectura de deterioro se sostiene hasta el tramo de 55 a 59 años; más allá conviene interpretarla con cautela.
+
+```{r, fig.width=10, fig.height=6, dpi=300}
+gr_Informalidad_Edad_AS
+```
+
+El gráfico replica el análisis exclusivamente para mujeres, y el contraste con el agregado es informativo. `r if (U_M$es_u) paste0("El mínimo femenino se ubica en **", U_M$min_tramo, "** con ", fc_Form_Num(U_M$min_val, 1), "%, mientras que en el agregado se alcanza en **", U_AS$min_tramo, "**.") else paste0("La curva femenina describe un patrón ", U_M$forma, ", a diferencia del agregado.")` `r if (U_M$es_u && U_AS$es_u && U_M$min_tramo != U_AS$min_tramo) "Que el punto más bajo llegue antes en mujeres implica que su informalidad empieza a crecer una década más temprano, en los tramos donde se concentran la maternidad y las responsabilidades de cuidado que este informe documenta en la sección de participación." else ""` En los extremos, la curva femenina alcanza `r fc_Form_Num(U_M$ext_1, 1)`% en el tramo más joven y `r fc_Form_Num(U_M$ext_n, 1)`% en el de mayor edad. `r if (U_M$es_u && U_AS$es_u) { if (U_M$repunte > U_AS$repunte) paste0("Su repunte desde el mínimo alcanza ", fc_Form_Num(U_M$repunte, 1), " puntos, frente a ", fc_Form_Num(U_AS$repunte, 1), " en el agregado, aunque parte de esa diferencia responde al adelanto de la edad legal de jubilación femenina y al efecto de definición descrito más arriba.") else paste0("Su repunte desde el mínimo alcanza ", fc_Form_Num(U_M$repunte, 1), " puntos, algo menor que los ", fc_Form_Num(U_AS$repunte, 1), " del agregado.") }`
+
+```{r, fig.width=10, fig.height=6, dpi=300}
+gr_Comp_Desocupados_Edad
+```
+
+El gráfico presenta la tasa de informalidad por tramo quinquenal de edad para ambos sexos, comparando tres períodos de referencia. En el trimestre actual la informalidad describe un patrón en U: alcanza su mínimo en el tramo **`r U_AS$min_tramo`** con `r fc_Form_Num(U_AS$min_val, 1)`%, frente a `r fc_Form_Num(U_AS$ext_1, 1)`% en el tramo más joven y `r fc_Form_Num(U_AS$ext_n, 1)`% en el de mayor edad.
+
+```{r, fig.width=10, fig.height=6, dpi=300}
+gr_Informalidad_Edad_AS
+```
+
+El gráfico replica el análisis exclusivamente para mujeres. El mínimo se ubica en el tramo **`r U_M$min_tramo`** con `r fc_Form_Num(U_M$min_val, 1)`%, y los extremos alcanzan `r fc_Form_Num(U_M$ext_1, 1)`% y `r fc_Form_Num(U_M$ext_n, 1)`%, respectivamente.
+
+```{r, fig.width=10, fig.height=6, dpi=300}
+gr_Informalidad_Edad_M
+```
+
+```{r, results='asis'}
+if (tiene_desest) cat(knitr::knit_child(file.path("intermedios", "modulo_desest_anexo.qmd"), quiet = TRUE))
+```
+
+
+## *Anexo 6. Motivo del desempleo*
+
+**"`r Motivo_Mayor_Nivel`"** concentra `r fc_banda_proporcion(Motivo_Mayor_Nivel_Pct, id = 10)` los casos. Conviene leer esta tabla junto con la de razón de fin de trabajo: "Circunstancias externas" agrupa a quienes terminaron su contrato o vieron quebrar a su empleador, motivos donde no hubo una decisión activa en contra del trabajador, mientras que "Decisión de otros" queda reservada al despido directo. El nivel de esta última es `r fc_banda_razon(Mot_DecOtros_Niv, Mot_CircExt_Niv, 2)` de circunstancias externas.
+
+```{r}
+ft_MotivoDesempleo
+```
+El gráfico muestra la composición de los desocupados según motivo del desempleo desde `r fc_fecha_a_trimestre(fecha_MotDes_InicioSerie)`. El peso relativo de **"`r Motivo_Mayor_Nivel`"** pasó de `r fc_Form_Num(MotTop_Pct_Ini, 1)`% al inicio de la serie a `r fc_Form_Num(MotTop_Pct_Act, 1)`% en el trimestre actual.
+
+```{r, fig.width=10, fig.height=6, dpi=300}
+gr_Comp_MotivoDesempleo
+```
+
+Dentro de **"`r Motivo_Mayor_Nivel`"**, `r if (Mot_Top_Coincide) paste0(Mot_Top_Lider_Niv, " superan a su contraparte tanto en magnitud como en el movimiento trimestral") else paste0(Mot_Top_Lider_Niv, " superan en magnitud, mientras que el mayor movimiento trimestral corresponde a ", Mot_Top_Lider_Mes)`. `r if (Motivo_N_Divergentes == 0) "En el trimestre, hombres y mujeres se mueven en la misma dirección en todas las categorías." else paste0("Hombres y mujeres se mueven en direcciones opuestas en ", if (Motivo_N_Divergentes == 1) paste0('"', Motivo_Divergentes, '"') else paste0(Motivo_N_Divergentes, " categorías: ", paste(Motivo_Divergentes, collapse = ", ")), ".")`
+
+```{r}
+ft_MotivoDesempleo_Sexo
+```
+
+## *Anexo 7. Razón de fin de trabajo*
+
+**"`r Razon_Mayor_Nivel`"** concentra `r fc_banda_proporcion(Razon_Mayor_Nivel_Pct, id = 10)` los casos y registra el mayor movimiento trimestral de la tabla, `r fc_banda_razon(Razon_MovMes_1, Razon_MovMes_2, 1)` movimiento de la segunda categoría. `r if (Razon_N_Baja_Anual == 0) "Todas las categorías muestran alzas en doce meses." else paste0("En doce meses ", if (Razon_N_Baja_Anual == 1) "una categoría retrocede: " else paste0(Razon_N_Baja_Anual, " categorías retroceden: "), Razon_Baja_Anual, ".")`
+
+```{r}
+ft_RazonDesempleo
+```
+
+El gráfico muestra la composición de los desocupados según razón de fin de trabajo desde `r fc_fecha_a_trimestre(fecha_RazDes_InicioSerie)`. El peso relativo de Jubilación pasó de `r fc_Form_Num(Jubil_Pct_Ini, 1)`% al inicio de la serie a `r fc_Form_Num(Jubil_Pct_Act, 1)`% en el trimestre actual, en un contexto de envejecimiento de la fuerza laboral documentado en la sección de edad de este informe.
+
+```{r, fig.width=10, fig.height=6, dpi=300}
+gr_Comp_RazonDesempleo
+```
+
+El desglose por sexo dentro de **"`r Razon_MayorMovMes`"** muestra `r if (Razon_Top_Coincide) paste0("a ", Razon_Top_Lider_Nivel, " liderando tanto en magnitud como en el movimiento trimestral") else paste0("a ", Razon_Top_Lider_Nivel, " liderando en magnitud, mientras que el mayor movimiento trimestral corresponde a ", Razon_Top_Lider_DifMes)`. En Jubilación, el nivel masculino `r fc_banda_razon(Razon_Jubil_H, Razon_Jubil_M, 1)` femenino, patrón consistente con la diferencia de empleo entre sexos, amplificado por la menor edad legal de jubilación femenina, que retira antes a las mujeres de la fuerza de trabajo. `r if (!is.na(Razon_Invertida_Top)) paste0('La tendencia general se revierte en "', Razon_Invertida_Top, '", donde el nivel femenino ', fc_banda_razon(Razon_Inv_M, Razon_Inv_H, 1), ' masculino.') else ''`
+
+```{r}
+ft_RazonDesempleo_Sexo
+```
